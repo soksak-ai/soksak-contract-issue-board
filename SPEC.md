@@ -107,6 +107,29 @@ Withdraws a card. A projection that cannot be withdrawn is a leak: the producer 
 the board keeps showing it forever. Removing a card the board no longer has is not an error — the
 end state is what matters, and it is already reached.
 
+## The change signal
+
+A board changes under a human's hands — a card is dragged to another column, an issue is closed by
+someone who never told the producer. A producer that must react to that cannot poll a board it does
+not know the name of, so **the contract owns the topic**:
+
+```
+issue-board:changed
+```
+
+An implementer emits it whenever the board changes. A consumer subscribes to it — a service declares
+the subscription on the bus axis as `bus:issue-board:changed`.
+
+The topic name belongs to the contract, not to whoever implements it. A topic named after the
+implementer would be an implementer's id smuggled into a string: the consumer would have to know
+which board is running in order to hear it, and swapping the board would silence the consumer
+without a single error anywhere.
+
+**The signal is a notification, not a diff.** It says the board changed; it does not say what. A
+consumer re-reads the board (`node.list`) and reconciles against what it finds. A payload the
+consumer trusted would become a second, weaker copy of the board's state — and a consumer that acted
+on the payload alone would drift the moment one signal was coalesced or dropped.
+
 ## The mapping is the consumer's
 
 The board issues the id; the consumer must remember which issue it belongs to. A consumer that
