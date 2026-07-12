@@ -60,16 +60,21 @@ its layout, its views, its extra fields — is the implementer's own business.
 ### `node.add`
 
 ```
-node.add { title: string, description?: string, status?: status } → { nodeId: string }
+node.add { title: string, description?: string, status?: status, parentId?: nodeId } → { nodeId: string, key?: string }
 ```
 
 Creates a card and returns the id the board knows it by. The id is the **board's** — a consumer must
-not construct or predict it, and must not assume it is stable across boards.
+not construct or predict it, and must not assume it means anything on another board. A board may
+also return a human-facing `key`; a consumer may show it and must not depend on it.
+
+`parentId` groups the card under a card the consumer made earlier. A producer with many issues MUST
+group them: a board is shared, and issues scattered among everyone else's cards are unreadable — a
+human cannot see the loop at a glance, which was the entire point of projecting it.
 
 ### `node.edit`
 
 ```
-node.edit { id: nodeId, title?: string, description?: string, status?: status } → { ok: true }
+node.edit { node: nodeId, title?: string, description?: string, status?: status } → { ok: true }
 ```
 
 Updates a card in place. Omitted fields are left alone.
@@ -77,11 +82,30 @@ Updates a card in place. Omitted fields are left alone.
 ### `node.get`
 
 ```
-node.get { id: nodeId } → { node } | refusal
+node.get { node: nodeId } → { node } | refusal
 ```
 
 Reads a card back. A refusal means the board no longer has it — a human deleted it, or the board was
 reset. The consumer must treat that as "no card" and be able to make a new one.
+
+### `node.list`
+
+```
+node.list { search?: string } → { nodes: [{ id: nodeId, title, status, description }] }
+```
+
+Reads the board back. Anyone judging a projection — a human, a test, a second consumer — must be
+able to ask the board what it is showing without knowing which board it is.
+
+### `node.remove`
+
+```
+node.remove { node: nodeId } → { ok: true }
+```
+
+Withdraws a card. A projection that cannot be withdrawn is a leak: the producer drops an issue, and
+the board keeps showing it forever. Removing a card the board no longer has is not an error — the
+end state is what matters, and it is already reached.
 
 ## The mapping is the consumer's
 
