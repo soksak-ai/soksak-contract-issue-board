@@ -1,4 +1,4 @@
-# soksak-issue-board-spec
+# soksak-spec-plugin-issue-board
 
 An **issue board**: a surface where issues are visible as cards, each carrying a title, a state, and
 the detail a human needs to judge it at a glance.
@@ -13,13 +13,13 @@ and the reason the producer must never pin the implementer's plugin id.
 An implementer declares the contract in its manifest:
 
 ```json
-{ "implements": ["soksak-issue-board-spec"] }
+{ "implements": ["soksak-spec-plugin-issue-board"] }
 ```
 
 A consumer discovers implementers by contract id alone:
 
 ```
-sok plugin.implementers '{"contract":"soksak-issue-board-spec"}'
+sok plugin.implementers '{"contract":"soksak-spec-plugin-issue-board"}'
 ```
 
 and addresses whichever it finds as `plugin.<discovered id>.<command>`. A consumer that hard-codes
