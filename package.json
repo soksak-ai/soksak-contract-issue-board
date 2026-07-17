@@ -1,0 +1,11 @@
+{
+  "name": "soksak-contract-issue-board",
+  "private": true,
+  "version": "0.0.1",
+  "soksakRelease": {
+    "kind": "contract",
+    "id": "soksak-contract-issue-board",
+    "repository": "https://github.com/soksak-ai/soksak-contract-issue-board",
+    "manifest": "release.json"
+  }
+}
