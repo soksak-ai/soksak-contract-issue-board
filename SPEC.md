@@ -19,7 +19,7 @@ An implementer declares the contract in its manifest:
 A consumer discovers implementers by contract id alone:
 
 ```
-sok plugin.implementers '{"contract":"soksak-spec-plugin-issue-board"}'
+sok plugin.implementers '{"id":"soksak-spec-plugin-issue-board"}'
 ```
 
 and addresses whichever it finds as `plugin.<discovered id>.<command>`. A consumer that hard-codes
