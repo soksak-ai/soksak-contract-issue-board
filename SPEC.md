@@ -55,12 +55,24 @@ An implementer MAY offer more (`todo`, `review`, …). A consumer MUST NOT requi
 ## Commands
 
 An implementer exposes these. Names and shapes are the contract; everything else about the board —
-its layout, its views, its extra fields — is the implementer's own business.
+its layout, its views — is the implementer's own business.
+
+Two classes of node field, and the line between them is the contract:
+
+- **Structural fields** — `parentId`, `order`, `locked`, `collapsed` — are how a producer *shapes* the
+  board: hierarchy, sibling order, an immutable subtree, a folded subtree. These are generic to any
+  board and are part of the contract. The rule is **write-read symmetry**: a field a producer can set
+  through `node.add`/`node.edit` it can read back through `node.get`/`node.list`. A board that lets you
+  set structure but not read it back cannot be reconciled against, which defeats the projection.
+- **Domain fields** — anything else a producer attaches (a verification verdict, a node category) — are
+  the implementer's own business. The contract neither declares nor forbids them; it round-trips them
+  when the implementer chooses to model them. A producer that depends on a domain field depends on a
+  board that models it, and says so — it is not a contract guarantee.
 
 ### `node.add`
 
 ```
-node.add { title: string, description?: string, status?: status, parentId?: nodeId } → { nodeId: string, key?: string }
+node.add { title: string, description?: string, status?: status, parentId?: nodeId, locked?: boolean, collapsed?: boolean } → { nodeId: string, key?: string }
 ```
 
 Creates a card and returns the id the board knows it by. The id is the **board's** — a consumer must
@@ -74,10 +86,12 @@ human cannot see the loop at a glance, which was the entire point of projecting 
 ### `node.edit`
 
 ```
-node.edit { node: nodeId, title?: string, description?: string, status?: status } → { ok: true }
+node.edit { node: nodeId, title?: string, description?: string, status?: status, locked?: boolean, collapsed?: boolean } → { ok: true }
 ```
 
-Updates a card in place. Omitted fields are left alone.
+Updates a card in place. Omitted fields are left alone. `parentId` and `order` are the board's own
+(a card is created under a parent and the board assigns order); moving or reordering a card is the
+board's operation, not a field of `node.edit`.
 
 ### `node.get`
 
@@ -91,11 +105,14 @@ reset. The consumer must treat that as "no card" and be able to make a new one.
 ### `node.list`
 
 ```
-node.list { search?: string } → { nodes: [{ id: nodeId, title, status, description }] }
+node.list { search?: string } → { nodes: [{ id: nodeId, title, status, description, parentId, order, locked, collapsed }] }
 ```
 
 Reads the board back. Anyone judging a projection — a human, a test, a second consumer — must be
-able to ask the board what it is showing without knowing which board it is.
+able to ask the board what it is showing without knowing which board it is. Every structural field is
+returned, so a consumer can reconstruct the shape it built (parent, order, lock, fold) without holding
+private knowledge of the board. Domain fields the implementer models may ride along too; a consumer
+that reads one has coupled itself to that implementer and must not call it a contract guarantee.
 
 ### `node.remove`
 
